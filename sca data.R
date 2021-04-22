@@ -1,7 +1,7 @@
 
 ###### DESIGNATE A COUNTRY ######
 
-country <- "Uzbekistan"
+country <- "Nepal"
 
 ###### DESIGNATE A COUNTRY ######
 
