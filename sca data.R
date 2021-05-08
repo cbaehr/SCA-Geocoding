@@ -1,7 +1,7 @@
 
 ###### DESIGNATE A COUNTRY ######
 
-country <- "Bangladesh"
+country <- "Maldives"
 
 ###### DESIGNATE A COUNTRY ######
 
