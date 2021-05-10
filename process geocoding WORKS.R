@@ -1,10 +1,10 @@
 
-# my_c <- c("Bangladesh", "Pakistan", "Uzbekistan", "Afghanistan", "India", "Kazakhstan", "Kyrgyzstan",
-#           "Tajikistan", "Turkmenistan")
-#my_a <- c("BGD", "PAK", "UZB", "AFG", "IND", "KAZ", "KGZ", "TJK", "TKM")
+my_c <- c("Bangladesh", "Pakistan", "Uzbekistan", "Afghanistan", "India", "Kazakhstan", "Kyrgyzstan",
+          "Tajikistan", "Sri Lanka")
+my_a <- c("BGD", "PAK", "UZB", "AFG", "IND", "KAZ", "KGZ", "TJK", "LKA")
 
-my_c <- c("Kyrgyzstan", "Tajikistan", "Turkmenistan")
-my_a <- c("KGZ", "TJK", "TKM")
+#my_c <- c("Turkmenistan")
+#my_a <- c("TKM")
 
 
 library(rgeos); library(sf)
@@ -13,15 +13,10 @@ for (l in 1:length(my_c)) {
   
   rm(list = setdiff(ls(), c("my_c", "my_a", "l")))
   
-  #country <- "Uzbekistan"
-  #abb <- "UZB"
   country <- my_c[l]
   abb <- my_a[l]
   
-  
   ##########
-  
-  #rm(list = setdiff(ls(), c("country", "abb", "j")))
   
   dat_path <- paste0("/Users/christianbaehr/GitHub/SCA Geocoding/", country, "/", country, "_master.csv")
   dat <- read.csv(dat_path, stringsAsFactors = F)
@@ -135,8 +130,8 @@ for (l in 1:length(my_c)) {
   
   out <- rbind(dat_out_new_district_merge, dat_out_new_province_merge[, dat_order], dat_out_new_merge_countrylevel[, dat_order])
   out$geometry[out$level=="country"] <- NULL
-  out <- out[, !(names(out) %in% c("merge_id", "GEO_codedUp", "location_details", "GEO_geojsonLink", "level"))]
-  out$country <- "Sri Lanka"
+  out <- out[, !(names(out) %in% c("merge_id", "GEO_codedUp", "location_details", "GEO_geojsonLink"))]
+  out$country <- country
   names(out)[names(out)=="type"] <- "name_type"
   
   out_file <- paste0("/Users/christianbaehr/Downloads/", country, "_2000-17_geocoded_", as.character(Sys.Date()), ".geojson")
@@ -148,4 +143,90 @@ for (l in 1:length(my_c)) {
   
   
 }
+
+######################
+
+tkm <- read.csv("/Users/christianbaehr/Github/SCA Geocoding/turkmenistan/turkmenistan_master.csv", 
+                stringsAsFactors=F)
+
+gadm1 <- st_read("/Users/christianbaehr/Desktop/shapefiles/gadm36_TKM_shp/gadm36_TKM_2.shp", stringsAsFactors=F)
+gadm1$centroids <- st_centroid(gadm1$geometry)
+gadm1[, c("X", "Y")] <- st_coordinates(gadm1$centroids)
+gadm1[, c("X", "Y")] <- round(data.frame(gadm1)[, c("X", "Y")], digits=2)
+gadm1$merge_id <- paste0(gadm1$X, ", ", gadm1$Y)
+
+names(gadm1)[names(gadm1)=="ENGTYPE_1"] <- "type"
+names(gadm1)[names(gadm1)=="NAME_1"] <- "name"
+names(gadm1)[names(gadm1)=="GID_1"] <- "GID"
+names(gadm1)[names(gadm1)=="NAME_1"] <- "name"
+
+dat_out_new_province <- dat_out_new[dat_out_new$level=="province", ]
+
+#tkm[, c("X", "Y", "name", "name_type", "GID")] <- NA
+tkm[, c("X", "Y")] <- NA
+
+for (i in 1:nrow(tkm)) {
+  if(tkm$level[i]=="country") {
+    
+  } else {
+    geo <- st_read(tkm$christian_geojson[i])
+    cent <- st_coordinates(st_centroid(geo$geometry))
+    tkm$X[i] <- cent[1]
+    tkm$Y[i] <- cent[2]
+  }
+}
+
+
+dat_out_new <- tkm
+
+dat_out_new[, c("X", "Y")] <- round(data.frame(dat_out_new)[, c("X", "Y")], digits=2)
+dat_out_new$merge_id <- paste0(dat_out_new$X, ", ", dat_out_new$Y)
+
+dat_out_new_province_merge <- merge(dat_out_new, gadm1[, c("merge_id", "name", "type", "GID", "geometry")], by="merge_id")
+
+tkm_country <- tkm[tkm$level=="country",]
+tkm_country$name <- "Turkmenistan"
+tkm_country$type <- "Country"
+tkm_country$GID <- "Country"
+tkm_country$merge_id <- NA
+
+gadm0_path <- paste0("/Users/christianbaehr/Desktop/shapefiles/gadm36_TKM_shp/gadm36_TKM_0.shp")
+gadm0 <- st_read(gadm0_path, stringsAsFactors=F)
+
+tkm_country$geometry <- gadm0$geometry
+
+dat_order <- names(dat_out_new_province_merge)
+
+
+tkm_out <- rbind(dat_out_new_province_merge, tkm_country[, dat_order])
+
+###
+
+out=tkm_out
+
+out$geometry[out$level=="country"] <- NULL
+out <- out[, !(names(out) %in% c("merge_id", "GEO_codedUp", "location_details", "GEO_geojsonLink"))]
+out$country <- "Turkmenistan"
+names(out)[names(out)=="type"] <- "name_type"
+
+out_file <- paste0("/Users/christianbaehr/Downloads/Turkmenistan_2000-17_geocoded_", as.character(Sys.Date()), ".geojson")
+out_file_csv <- paste0("/Users/christianbaehr/Downloads/Turkmenistan_2000-17_geocoded_", as.character(Sys.Date()), ".csv")
+
+write_sf(out, out_file, driver="GeoJSON", delete_dsn=T)
+write.csv(data.frame(out)[names(out)!="geometry"], out_file_csv, row.names = F)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
