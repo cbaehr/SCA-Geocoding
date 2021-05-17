@@ -3,8 +3,8 @@ my_c <- c("Bangladesh", "Pakistan", "Uzbekistan", "Afghanistan", "India", "Kazak
           "Tajikistan", "Sri Lanka")
 my_a <- c("BGD", "PAK", "UZB", "AFG", "IND", "KAZ", "KGZ", "TJK", "LKA")
 
-#my_c <- c("Turkmenistan")
-#my_a <- c("TKM")
+my_c <- c("Nepal")
+my_a <- c("NPL")
 
 
 library(rgeos); library(sf)
